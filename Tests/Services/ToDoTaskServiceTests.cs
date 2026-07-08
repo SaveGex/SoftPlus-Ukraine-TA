@@ -6,7 +6,7 @@ using Domain.Repositories.Interfaces;
 using FluentAssertions;
 using MapsterMapper;
 using Moq;
-namespace Tests.Application.Services;
+namespace Tests.Services;
 
 public class ToDoTaskServiceTests
 {
@@ -66,7 +66,7 @@ public class ToDoTaskServiceTests
     {
         // Arrange
         var updateDto = new ToDoTaskUpdateDTO(Guid.NewGuid(), "Updated Title", null, false, false, false, null, null, RecurrenceType.None, null);
-        _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(updateDto.Id)).ReturnsAsync((ToDoTask?)null);
+        _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(updateDto.Id)).ReturnsAsync((ToDoTask)null!);
 
         // Act
         var act = () => _sut.UpdateToDoTaskAsync(updateDto);
@@ -103,7 +103,7 @@ public class ToDoTaskServiceTests
     {
         // Arrange
         var nonExistingId = Guid.NewGuid();
-        _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(nonExistingId)).ReturnsAsync((ToDoTask?)null);
+        _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(nonExistingId)).ReturnsAsync((ToDoTask)null!);
 
         // Act
         var act = () => _sut.DeleteToDoTaskAsync(nonExistingId);
