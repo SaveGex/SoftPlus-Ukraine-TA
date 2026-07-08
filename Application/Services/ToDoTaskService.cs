@@ -2,19 +2,18 @@
 using Application.Services.Interfaces;
 using Domain.Models;
 using Domain.Repositories.Interfaces;
+using Mapster;
 using MapsterMapper;
 
 namespace Application.Services
 {
     public class ToDoTaskService : IToDoTaskService
     {
-        private IToDoTaskRepository ToDoTaskRepository { get; init; }
-        private IMapper Mapper { get; init; }
+        private readonly IToDoTaskRepository _toDoTaskRepository;
 
-        public ToDoTaskService(IToDoTaskRepository toDoTaskRepository, IMapper mapper)
+        public ToDoTaskService(IToDoTaskRepository toDoTaskRepository)
         {
-            ToDoTaskRepository = toDoTaskRepository;
-            Mapper = mapper;
+            _toDoTaskRepository = toDoTaskRepository;
         }
 
         public async Task<ToDoTaskResponseDTO> CreateToDoTaskAsync(ToDoTaskCreateDTO dto)
@@ -24,71 +23,78 @@ namespace Application.Services
                 throw new Exception("Task title cannot be empty.");
             }
 
-            ToDoTask task = Mapper.Map<ToDoTask>(dto);
-            ToDoTask result = await ToDoTaskRepository.CreateToDoTaskAsync(task);
-            return Mapper.Map<ToDoTaskResponseDTO>(result);
+            var task = dto.Adapt<ToDoTask>();
+            var result = await _toDoTaskRepository.CreateToDoTaskAsync(task);
+
+            return result.Adapt<ToDoTaskResponseDTO>();
         }
 
         public async Task<ToDoTaskResponseDTO> GetToDoTaskByIdAsync(Guid taskId)
         {
-            ToDoTask? task = await ToDoTaskRepository.GetToDoTaskByIdAsync(taskId);
+            var task = await _toDoTaskRepository.GetToDoTaskByIdAsync(taskId);
             if (task is null)
             {
-                throw new Exception($"ToDoTask by id {taskId} does not found.");
+                throw new Exception($"ToDoTask with id {taskId} was not found.");
             }
-            return Mapper.Map<ToDoTaskResponseDTO>(task);
+
+            return task.Adapt<ToDoTaskResponseDTO>();
         }
 
         public async Task<ToDoTaskResponseDTO> GetToDoTaskByIdIncludeStepsAndCategoryAsync(Guid taskId)
         {
-            ToDoTask? task = await ToDoTaskRepository.GetToDoTaskByIdIncludeStepsAndCategoryAsync(taskId);
+            var task = await _toDoTaskRepository.GetToDoTaskByIdIncludeStepsAndCategoryAsync(taskId);
             if (task is null)
             {
-                throw new Exception($"ToDoTask by id {taskId} does not found.");
+                throw new Exception($"ToDoTask with id {taskId} was not found.");
             }
-            return Mapper.Map<ToDoTaskResponseDTO>(task);
+
+            return task.Adapt<ToDoTaskResponseDTO>();
         }
 
         public async Task<IEnumerable<ToDoTaskResponseDTO>> GetModelAllToDoTasksAsync()
         {
-            var tasks = await ToDoTaskRepository.GetAllToDoTasksAsync();
-            return Mapper.Map<IEnumerable<ToDoTaskResponseDTO>>(tasks);
+            var tasks = await _toDoTaskRepository.GetAllToDoTasksAsync();
+
+            return tasks.Adapt<IEnumerable<ToDoTaskResponseDTO>>();
         }
 
         public async Task<IEnumerable<ToDoTaskResponseDTO>> GetMyDayToDoTasksAsync()
         {
-            var tasks = await ToDoTaskRepository.GetMyDayToDoTasksAsync();
-            return Mapper.Map<IEnumerable<ToDoTaskResponseDTO>>(tasks);
+            var tasks = await _toDoTaskRepository.GetMyDayToDoTasksAsync();
+
+            return tasks.Adapt<IEnumerable<ToDoTaskResponseDTO>>();
         }
 
-        public async Task<ToDoTaskResponseDTO> UpdateToDoTaskAsync(ToDoTaskUpdateDTO dto)
+        public async Task<ToDoTaskResponseDTO> UpdateToDoTaskAsync(Guid taskId, ToDoTaskUpdateDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Title))
             {
                 throw new Exception("Task title cannot be empty.");
             }
 
-            ToDoTask? existingTask = await ToDoTaskRepository.GetToDoTaskByIdAsync(dto.Id);
+            var existingTask = await _toDoTaskRepository.GetToDoTaskByIdAsync(taskId);
             if (existingTask is null)
             {
-                throw new Exception($"ToDoTask by id {dto.Id} does not found to update.");
+                throw new Exception($"ToDoTask with id {taskId} was not found to update.");
             }
 
-            ToDoTask task = Mapper.Map<ToDoTask>(dto);
-            ToDoTask result = await ToDoTaskRepository.UpdateToDoTaskAsync(task);
-            return Mapper.Map<ToDoTaskResponseDTO>(result);
+            dto.Adapt(existingTask);
+            var result = await _toDoTaskRepository.UpdateToDoTaskAsync(existingTask);
+
+            return result.Adapt<ToDoTaskResponseDTO>();
         }
 
         public async Task<ToDoTaskResponseDTO> DeleteToDoTaskAsync(Guid taskId)
         {
-            ToDoTask? task = await ToDoTaskRepository.GetToDoTaskByIdAsync(taskId);
+            var task = await _toDoTaskRepository.GetToDoTaskByIdAsync(taskId);
             if (task is null)
             {
-                throw new Exception($"ToDoTask by id {taskId} does not found.");
+                throw new Exception($"ToDoTask with id {taskId} was not found.");
             }
 
-            ToDoTask result = await ToDoTaskRepository.DeleteToDoTaskAsync(task);
-            return Mapper.Map<ToDoTaskResponseDTO>(result);
+            var result = await _toDoTaskRepository.DeleteToDoTaskAsync(task);
+
+            return result.Adapt<ToDoTaskResponseDTO>();
         }
     }
 }

@@ -2,39 +2,20 @@
 using Domain.Enums;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.DB
 {
     internal class ToDoDBContext : DbContext
     {
 
-        IConfiguration? Configuration { get; init; }
-
         public ToDoDBContext(DbContextOptions<ToDoDBContext> options)
             : base(options)
         {
         }
 
-        public ToDoDBContext(DbContextOptions<ToDoDBContext> options, IConfiguration configuration)
-            : base(options)
-        {
-            Configuration = configuration;
-        }
-
         public virtual DbSet<ToDoTask> ToDoTasks { get; set; }
         public virtual DbSet<ToDoStep> ToDoSteps { get; set; }
         public virtual DbSet<ToDoCategory> ToDoCategories { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseSqlServer(Configuration?.GetConnectionString("DefaultConnection"));
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

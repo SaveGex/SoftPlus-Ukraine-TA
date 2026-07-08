@@ -30,7 +30,6 @@ namespace Application.DTOs
     );
 
     public record ToDoTaskUpdateDTO(
-        Guid Id,
         string Title,
         string? Note,
         bool IsCompleted,
@@ -56,7 +55,6 @@ namespace Application.DTOs
     );
 
     public record ToDoCategoryUpdateDTO(
-        Guid Id,
         string Name,
         string? Icon
     );
@@ -75,9 +73,7 @@ namespace Application.DTOs
     );
 
     public record ToDoStepUpdateDTO(
-        Guid Id,
         string Title,
-        bool IsCompleted,
-        Guid TodoTaskId
+        bool IsCompleted
     );
 }

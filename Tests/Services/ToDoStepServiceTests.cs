@@ -19,27 +19,22 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
 
             var createDto = new ToDoStepCreateDTO("title", Guid.NewGuid());
-            var mappedStep = new ToDoStep { Id = Guid.NewGuid(), Title = "title", TodoTaskId = createDto.TodoTaskId };
             var createdStep = new ToDoStep { Id = Guid.NewGuid(), Title = "title", TodoTaskId = createDto.TodoTaskId };
-            var response = new ToDoStepResponseDTO(createdStep.Id, createdStep.Title, createdStep.IsCompleted, createdStep.TodoTaskId);
 
-            mapperMock.Setup(m => m.Map<ToDoStep>(It.IsAny<ToDoStepCreateDTO>())).Returns(mappedStep);
-            repoMock.Setup(r => r.CreateToDoStepAsync(mappedStep)).ReturnsAsync(createdStep);
-            mapperMock.Setup(m => m.Map<ToDoStepResponseDTO>(createdStep)).Returns(response);
+            repoMock.Setup(r => r.CreateToDoStepAsync(It.IsAny<ToDoStep>())).ReturnsAsync(createdStep);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             var result = await service.CreateToDoStepAsync(createDto);
 
             // Assert - behavior shows constructor correctly stored dependencies
-            result.Should().BeSameAs(response);
-            mapperMock.Verify(m => m.Map<ToDoStep>(createDto), Times.Once);
-            repoMock.Verify(r => r.CreateToDoStepAsync(mappedStep), Times.Once);
-            mapperMock.Verify(m => m.Map<ToDoStepResponseDTO>(createdStep), Times.Once);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(createdStep.Id);
+            result.Title.Should().Be(createdStep.Title);
+            repoMock.Verify(r => r.CreateToDoStepAsync(It.IsAny<ToDoStep>()), Times.Once);
         }
 
         [Fact]
@@ -47,10 +42,9 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
-            var dto = new ToDoStepCreateDTO("   ", Guid.NewGuid());
+            var dto = new ToDoStepCreateDTO("    ", Guid.NewGuid());
 
             // Act
             Func<Task> act = async () => await service.CreateToDoStepAsync(dto);
@@ -58,7 +52,6 @@ namespace Tests.Services
             // Assert
             await act.Should().ThrowAsync<Exception>().WithMessage("Step name cannot be empty.");
             repoMock.VerifyNoOtherCalls();
-            mapperMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -66,27 +59,22 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
 
             var dto = new ToDoStepCreateDTO("Do it", Guid.NewGuid());
-            var step = new ToDoStep { Id = Guid.NewGuid(), Title = dto.Title, TodoTaskId = dto.TodoTaskId };
             var created = new ToDoStep { Id = Guid.NewGuid(), Title = dto.Title, TodoTaskId = dto.TodoTaskId };
-            var response = new ToDoStepResponseDTO(created.Id, created.Title, created.IsCompleted, created.TodoTaskId);
 
-            mapperMock.Setup(m => m.Map<ToDoStep>(dto)).Returns(step);
-            repoMock.Setup(r => r.CreateToDoStepAsync(step)).ReturnsAsync(created);
-            mapperMock.Setup(m => m.Map<ToDoStepResponseDTO>(created)).Returns(response);
+            repoMock.Setup(r => r.CreateToDoStepAsync(It.IsAny<ToDoStep>())).ReturnsAsync(created);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             var result = await service.CreateToDoStepAsync(dto);
 
             // Assert
-            result.Should().BeSameAs(response);
-            mapperMock.Verify(m => m.Map<ToDoStep>(dto), Times.Once);
-            repoMock.Verify(r => r.CreateToDoStepAsync(step), Times.Once);
-            mapperMock.Verify(m => m.Map<ToDoStepResponseDTO>(created), Times.Once);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(created.Id);
+            result.Title.Should().Be(created.Title);
+            repoMock.Verify(r => r.CreateToDoStepAsync(It.IsAny<ToDoStep>()), Times.Once);
         }
 
         [Fact]
@@ -94,17 +82,16 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
             var id = Guid.NewGuid();
             repoMock.Setup(r => r.GetToDoStepByIdAsync(id)).ReturnsAsync((ToDoStep)null!);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             Func<Task> act = async () => await service.GetToDoStepByIdAsync(id);
 
             // Assert
-            await act.Should().ThrowAsync<Exception>().WithMessage($"ToDoStep by id {id} does not found.");
+            await act.Should().ThrowAsync<Exception>().WithMessage($"ToDoStep with id {id} was not found.");
         }
 
         [Fact]
@@ -112,23 +99,21 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
             var id = Guid.NewGuid();
             var step = new ToDoStep { Id = id, Title = "t", TodoTaskId = Guid.NewGuid() };
-            var response = new ToDoStepResponseDTO(step.Id, step.Title, step.IsCompleted, step.TodoTaskId);
 
             repoMock.Setup(r => r.GetToDoStepByIdAsync(id)).ReturnsAsync(step);
-            mapperMock.Setup(m => m.Map<ToDoStepResponseDTO>(step)).Returns(response);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             var result = await service.GetToDoStepByIdAsync(id);
 
             // Assert
-            result.Should().BeSameAs(response);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(id);
+            result.Title.Should().Be("t");
             repoMock.Verify(r => r.GetToDoStepByIdAsync(id), Times.Once);
-            mapperMock.Verify(m => m.Map<ToDoStepResponseDTO>(step), Times.Once);
         }
 
         [Fact]
@@ -136,7 +121,6 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
             var taskId = Guid.NewGuid();
 
             var steps = new List<ToDoStep>
@@ -145,24 +129,17 @@ namespace Tests.Services
                 new ToDoStep { Id = Guid.NewGuid(), Title = "b", TodoTaskId = taskId }
             };
 
-            var responses = new List<ToDoStepResponseDTO>
-            {
-                new ToDoStepResponseDTO(steps[0].Id, steps[0].Title, steps[0].IsCompleted, steps[0].TodoTaskId),
-                new ToDoStepResponseDTO(steps[1].Id, steps[1].Title, steps[1].IsCompleted, steps[1].TodoTaskId)
-            };
-
             repoMock.Setup(r => r.GetToDoStepsByTaskIdAsync(taskId)).ReturnsAsync(steps);
-            mapperMock.Setup(m => m.Map<IEnumerable<ToDoStepResponseDTO>>(steps)).Returns(responses);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             var result = await service.GetToDoStepsByTaskIdAsync(taskId);
 
             // Assert
-            result.Should().BeSameAs(responses);
+            result.Should().NotBeNull();
+            result.Should().HaveCount(2);
             repoMock.Verify(r => r.GetToDoStepsByTaskIdAsync(taskId), Times.Once);
-            mapperMock.Verify(m => m.Map<IEnumerable<ToDoStepResponseDTO>>(steps), Times.Once);
         }
 
         [Fact]
@@ -170,18 +147,17 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
-            var dto = new ToDoStepUpdateDTO(Guid.NewGuid(), " ", false, Guid.NewGuid());
+            Guid id = Guid.NewGuid();
+            var dto = new ToDoStepUpdateDTO(" ", false);
 
             // Act
-            Func<Task> act = async () => await service.UpdateToDoStepAsync(dto);
+            Func<Task> act = async () => await service.UpdateToDoStepAsync(id, dto);
 
             // Assert
             await act.Should().ThrowAsync<Exception>().WithMessage("Step name cannot be empty.");
             repoMock.VerifyNoOtherCalls();
-            mapperMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -189,18 +165,17 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
             var id = Guid.NewGuid();
-            var dto = new ToDoStepUpdateDTO(id, "title", false, Guid.NewGuid());
-            repoMock.Setup(r => r.GetToDoStepByIdAsync(id)).ReturnsAsync((ToDoStep)null!);
+            var dto = new ToDoStepUpdateDTO("title", false);
+            repoMock.Setup(r => r.GetToDoStepByIdAsync(id));
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
-            Func<Task> act = async () => await service.UpdateToDoStepAsync(dto);
+            Func<Task> act = async () => await service.UpdateToDoStepAsync(id, dto);
 
             // Assert
-            await act.Should().ThrowAsync<Exception>().WithMessage($"ToDoStep by id {id} does not found to update.");
+            await act.Should().ThrowAsync<Exception>().WithMessage($"ToDoStep with id {id} was not found to update.");
         }
 
         [Fact]
@@ -208,81 +183,73 @@ namespace Tests.Services
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
 
             var id = Guid.NewGuid();
-            var dto = new ToDoStepUpdateDTO(id, "new title", true, Guid.NewGuid());
+            var taskId = Guid.NewGuid();
+            var dto = new ToDoStepUpdateDTO("new title", true);
 
-            var existing = new ToDoStep { Id = id, Title = "old", TodoTaskId = dto.TodoTaskId };
-            var mapped = new ToDoStep { Id = id, Title = dto.Title, IsCompleted = dto.IsCompleted, TodoTaskId = dto.TodoTaskId };
-            var updated = new ToDoStep { Id = id, Title = dto.Title, IsCompleted = dto.IsCompleted, TodoTaskId = dto.TodoTaskId };
-            var response = new ToDoStepResponseDTO(updated.Id, updated.Title, updated.IsCompleted, updated.TodoTaskId);
+            var existing = new ToDoStep { Id = id, Title = "old", TodoTaskId = taskId};
+            var updated = new ToDoStep { Id = id, Title = dto.Title, IsCompleted = dto.IsCompleted, TodoTaskId = taskId };
 
             repoMock.Setup(r => r.GetToDoStepByIdAsync(id)).ReturnsAsync(existing);
-            mapperMock.Setup(m => m.Map<ToDoStep>(dto)).Returns(mapped);
-            repoMock.Setup(r => r.UpdateToDoStepAsync(mapped)).ReturnsAsync(updated);
-            mapperMock.Setup(m => m.Map<ToDoStepResponseDTO>(updated)).Returns(response);
+            repoMock.Setup(r => r.UpdateToDoStepAsync(It.IsAny<ToDoStep>())).ReturnsAsync(updated);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
-            var result = await service.UpdateToDoStepAsync(dto);
+            var result = await service.UpdateToDoStepAsync(id, dto);
 
             // Assert
-            result.Should().BeSameAs(response);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(updated.Id);
+            result.Title.Should().Be(updated.Title);
             repoMock.Verify(r => r.GetToDoStepByIdAsync(id), Times.Once);
-            mapperMock.Verify(m => m.Map<ToDoStep>(dto), Times.Once);
-            repoMock.Verify(r => r.UpdateToDoStepAsync(mapped), Times.Once);
-            mapperMock.Verify(m => m.Map<ToDoStepResponseDTO>(updated), Times.Once);
+            repoMock.Verify(r => r.UpdateToDoStepAsync(It.IsAny<ToDoStep>()), Times.Once);
         }
+
         [Fact]
         public async Task DeleteToDoStepAsync_WhenNotFound_ThrowsException()
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
             var id = Guid.NewGuid();
             repoMock.Setup(r => r.GetToDoStepByIdAsync(id)).ReturnsAsync((ToDoStep)null!);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             Func<Task> act = async () => await service.DeleteToDoStepAsync(id);
 
             // Assert
-            await act.Should().ThrowAsync<Exception>().WithMessage($"ToDoStep by id {id} does not found.");
+            await act.Should().ThrowAsync<Exception>().WithMessage($"ToDoStep with id {id} was not found.");
             repoMock.Verify(r => r.GetToDoStepByIdAsync(id), Times.Once);
             repoMock.VerifyNoOtherCalls();
-            mapperMock.VerifyNoOtherCalls();
         }
+
         [Fact]
         public async Task DeleteToDoStepAsync_WhenFound_DeletesAndReturnsMappedResponse()
         {
             // Arrange
             var repoMock = new Mock<IToDoStepRepository>();
-            var mapperMock = new Mock<IMapper>();
 
             var id = Guid.NewGuid();
             var step = new ToDoStep { Id = id, Title = "to delete", TodoTaskId = Guid.NewGuid() };
             var deleted = new ToDoStep { Id = id, Title = "to delete", TodoTaskId = step.TodoTaskId };
-            var response = new ToDoStepResponseDTO(deleted.Id, deleted.Title, deleted.IsCompleted, deleted.TodoTaskId);
 
             repoMock.Setup(r => r.GetToDoStepByIdAsync(id)).ReturnsAsync(step);
             repoMock.Setup(r => r.DeleteToDoStepAsync(step)).ReturnsAsync(deleted);
-            mapperMock.Setup(m => m.Map<ToDoStepResponseDTO>(deleted)).Returns(response);
 
-            var service = new ToDoStepService(repoMock.Object, mapperMock.Object);
+            var service = new ToDoStepService(repoMock.Object);
 
             // Act
             var result = await service.DeleteToDoStepAsync(id);
 
             // Assert
-            result.Should().BeSameAs(response);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(id);
+            result.Title.Should().Be("to delete");
             repoMock.Verify(r => r.GetToDoStepByIdAsync(id), Times.Once);
             repoMock.Verify(r => r.DeleteToDoStepAsync(step), Times.Once);
-            mapperMock.Verify(m => m.Map<ToDoStepResponseDTO>(deleted), Times.Once);
         }
-
-
     }
 }

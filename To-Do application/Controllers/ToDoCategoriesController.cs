@@ -83,14 +83,9 @@ namespace To_Do_application.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IResult> UpdateToDoCategory(Guid id, [FromBody] ToDoCategoryUpdateDTO dto)
         {
-            if (id != dto.Id)
-            {
-                return Results.BadRequest("Id mismatch between route and body.");
-            }
-
             try
             {
-                await ToDoCategoryService.UpdateToDoCategoryAsync(dto);
+                await ToDoCategoryService.UpdateToDoCategoryAsync(id, dto);
             }
             catch (Exception ex)
             {

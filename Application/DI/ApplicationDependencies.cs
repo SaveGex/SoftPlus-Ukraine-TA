@@ -1,6 +1,7 @@
 ﻿using Application.Services;
 using Application.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using MapsterMapper;
 
 namespace Application.DI
 {
@@ -13,6 +14,8 @@ namespace Application.DI
                 services.AddScoped<IToDoCategoryService, ToDoCategoryService>();
                 services.AddScoped<IToDoStepService, ToDoStepService>();
                 services.AddScoped<IToDoTaskService, ToDoTaskService>();
+
+
             }
         }
     }

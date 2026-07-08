@@ -11,14 +11,12 @@ namespace Tests.Services;
 public class ToDoTaskServiceTests
 {
     private readonly Mock<IToDoTaskRepository> _repositoryMock;
-    private readonly Mock<IMapper> _mapperMock;
     private readonly ToDoTaskService _sut;
 
     public ToDoTaskServiceTests()
     {
         _repositoryMock = new Mock<IToDoTaskRepository>();
-        _mapperMock = new Mock<IMapper>();
-        _sut = new ToDoTaskService(_repositoryMock.Object, _mapperMock.Object);
+        _sut = new ToDoTaskService(_repositoryMock.Object);
     }
 
     [Fact]
@@ -27,20 +25,17 @@ public class ToDoTaskServiceTests
         // Arrange
         var createDto = new ToDoTaskCreateDTO("Clean my room", "Vacuum the floor", false, false, null, null, RecurrenceType.None, null);
         var domainTask = new ToDoTask { Id = Guid.NewGuid(), Title = createDto.Title, Note = createDto.Note };
-        var expectedResponse = new ToDoTaskResponseDTO(domainTask.Id, domainTask.Title, domainTask.Note, false, false, false, null, null, DateTime.UtcNow, RecurrenceType.None, null, new());
 
-        _mapperMock.Setup(m => m.Map<ToDoTask>(createDto)).Returns(domainTask);
-        _repositoryMock.Setup(r => r.CreateToDoTaskAsync(domainTask)).ReturnsAsync(domainTask);
-        _mapperMock.Setup(m => m.Map<ToDoTaskResponseDTO>(domainTask)).Returns(expectedResponse);
+        _repositoryMock.Setup(r => r.CreateToDoTaskAsync(It.IsAny<ToDoTask>())).ReturnsAsync(domainTask);
 
         // Act
         var result = await _sut.CreateToDoTaskAsync(createDto);
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(expectedResponse.Id);
-        result.Title.Should().Be(expectedResponse.Title);
-        _repositoryMock.Verify(r => r.CreateToDoTaskAsync(domainTask), Times.Once);
+        result.Id.Should().Be(domainTask.Id);
+        result.Title.Should().Be(domainTask.Title);
+        _repositoryMock.Verify(r => r.CreateToDoTaskAsync(It.IsAny<ToDoTask>()), Times.Once);
     }
 
     [Theory]
@@ -65,15 +60,16 @@ public class ToDoTaskServiceTests
     public async Task UpdateToDoTaskAsync_WhenTaskDoesNotExist_ShouldThrowException()
     {
         // Arrange
-        var updateDto = new ToDoTaskUpdateDTO(Guid.NewGuid(), "Updated Title", null, false, false, false, null, null, RecurrenceType.None, null);
-        _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(updateDto.Id)).ReturnsAsync((ToDoTask)null!);
+        Guid id = Guid.NewGuid();
+        var updateDto = new ToDoTaskUpdateDTO("Updated Title", null, false, false, false, null, null, RecurrenceType.None, null);
+        _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(id));
 
         // Act
-        var act = () => _sut.UpdateToDoTaskAsync(updateDto);
+        var act = () => _sut.UpdateToDoTaskAsync(id, updateDto);
 
         // Assert
         await act.Should().ThrowAsync<Exception>()
-            .WithMessage($"ToDoTask by id {updateDto.Id} does not found to update.");
+            .WithMessage($"ToDoTask with id {id} was not found to update.");
         _repositoryMock.Verify(r => r.UpdateToDoTaskAsync(It.IsAny<ToDoTask>()), Times.Never);
     }
 
@@ -83,11 +79,9 @@ public class ToDoTaskServiceTests
         // Arrange
         var taskId = Guid.NewGuid();
         var existingTask = new ToDoTask { Id = taskId, Title = "To Delete" };
-        var expectedResponse = new ToDoTaskResponseDTO(taskId, "To Delete", null, false, false, false, null, null, DateTime.UtcNow, RecurrenceType.None, null, new());
 
         _repositoryMock.Setup(r => r.GetToDoTaskByIdAsync(taskId)).ReturnsAsync(existingTask);
-        _repositoryMock.Setup(r => r.DeleteToDoTaskAsync(existingTask)).ReturnsAsync(existingTask);
-        _mapperMock.Setup(m => m.Map<ToDoTaskResponseDTO>(existingTask)).Returns(expectedResponse);
+        _repositoryMock.Setup(r => r.DeleteToDoTaskAsync(It.IsAny<ToDoTask>())).ReturnsAsync(existingTask);
 
         // Act
         var result = await _sut.DeleteToDoTaskAsync(taskId);
@@ -95,7 +89,7 @@ public class ToDoTaskServiceTests
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().Be(taskId);
-        _repositoryMock.Verify(r => r.DeleteToDoTaskAsync(existingTask), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteToDoTaskAsync(It.IsAny<ToDoTask>()), Times.Once);
     }
 
     [Fact]
@@ -110,7 +104,7 @@ public class ToDoTaskServiceTests
 
         // Assert
         await act.Should().ThrowAsync<Exception>()
-            .WithMessage($"ToDoTask by id {nonExistingId} does not found.");
+            .WithMessage($"ToDoTask with id {nonExistingId} was not found.");
         _repositoryMock.Verify(r => r.DeleteToDoTaskAsync(It.IsAny<ToDoTask>()), Times.Never);
     }
 }

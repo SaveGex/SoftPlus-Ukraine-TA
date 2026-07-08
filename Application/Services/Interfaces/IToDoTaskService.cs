@@ -9,7 +9,7 @@ namespace Application.Services.Interfaces
         Task<ToDoTaskResponseDTO> GetToDoTaskByIdIncludeStepsAndCategoryAsync(Guid taskId);
         Task<IEnumerable<ToDoTaskResponseDTO>> GetModelAllToDoTasksAsync();
         Task<IEnumerable<ToDoTaskResponseDTO>> GetMyDayToDoTasksAsync();
-        Task<ToDoTaskResponseDTO> UpdateToDoTaskAsync(ToDoTaskUpdateDTO dto);
+        Task<ToDoTaskResponseDTO> UpdateToDoTaskAsync(Guid taskId, ToDoTaskUpdateDTO dto);
         Task<ToDoTaskResponseDTO> DeleteToDoTaskAsync(Guid taskId);
     }
 }

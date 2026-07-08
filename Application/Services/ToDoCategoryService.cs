@@ -2,19 +2,18 @@
 using Application.Services.Interfaces;
 using Domain.Models;
 using Domain.Repositories.Interfaces;
+using Mapster;
 using MapsterMapper;
 
 namespace Application.Services
 {
     public class ToDoCategoryService : IToDoCategoryService
     {
-        private IToDoCategoryRepository ToDoCategoryRepository { get; init; }
-        private IMapper Mapper { get; init; }
+        private readonly IToDoCategoryRepository _toDoCategoryRepository;
 
-        public ToDoCategoryService(IToDoCategoryRepository toDoCategoryRepository, IMapper mapper)
+        public ToDoCategoryService(IToDoCategoryRepository toDoCategoryRepository)
         {
-            ToDoCategoryRepository = toDoCategoryRepository;
-            Mapper = mapper;
+            _toDoCategoryRepository = toDoCategoryRepository;
         }
 
         public async Task<ToDoCategoryResponseDTO> CreateToDoCategoryAsync(ToDoCategoryCreateDTO dto)
@@ -24,65 +23,71 @@ namespace Application.Services
                 throw new Exception("Category name cannot be empty.");
             }
 
-            ToDoCategory category = Mapper.Map<ToDoCategory>(dto);
-            ToDoCategory result = await ToDoCategoryRepository.CreateToDoCategoryAsync(category);
-            return Mapper.Map<ToDoCategoryResponseDTO>(result);
+            var category = dto.Adapt<ToDoCategory>();
+            var result = await _toDoCategoryRepository.CreateToDoCategoryAsync(category);
+
+            return result.Adapt<ToDoCategoryResponseDTO>();
         }
 
         public async Task<ToDoCategoryResponseDTO> GetToDoCategoryByIdAsync(Guid categoryId)
         {
-            ToDoCategory? category = await ToDoCategoryRepository.GetToDoCategoryByIdAsync(categoryId);
+            var category = await _toDoCategoryRepository.GetToDoCategoryByIdAsync(categoryId);
             if (category is null)
             {
                 throw new Exception($"ToDoCategory by id {categoryId} does not found.");
             }
-            return Mapper.Map<ToDoCategoryResponseDTO>(category);
+
+            return category.Adapt<ToDoCategoryResponseDTO>();
         }
 
         public async Task<ToDoCategoryResponseDTO> GetToDoCategoryByIdIncludeTasksAsync(Guid categoryId)
         {
-            ToDoCategory? category = await ToDoCategoryRepository.GetToDoCategoryByIdIncludeTasksAsync(categoryId);
+            var category = await _toDoCategoryRepository.GetToDoCategoryByIdIncludeTasksAsync(categoryId);
             if (category is null)
             {
                 throw new Exception($"ToDoCategory by id {categoryId} does not found.");
             }
-            return Mapper.Map<ToDoCategoryResponseDTO>(category);
+
+            return category.Adapt<ToDoCategoryResponseDTO>();
         }
 
         public async Task<IEnumerable<ToDoCategoryResponseDTO>> GetAllToDoCategoriesAsync()
         {
-            var categories = await ToDoCategoryRepository.GetAllToDoCategoriesAsync();
-            return Mapper.Map<IEnumerable<ToDoCategoryResponseDTO>>(categories);
+            var categories = await _toDoCategoryRepository.GetAllToDoCategoriesAsync();
+
+            return categories.Adapt<IEnumerable<ToDoCategoryResponseDTO>>();
         }
 
-        public async Task<ToDoCategoryResponseDTO> UpdateToDoCategoryAsync(ToDoCategoryUpdateDTO dto)
+        public async Task<ToDoCategoryResponseDTO> UpdateToDoCategoryAsync(Guid categoryId, ToDoCategoryUpdateDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))
             {
                 throw new Exception("Category name cannot be empty.");
             }
 
-            ToDoCategory? existingCategory = await ToDoCategoryRepository.GetToDoCategoryByIdAsync(dto.Id);
+            var existingCategory = await _toDoCategoryRepository.GetToDoCategoryByIdAsync(categoryId);
             if (existingCategory is null)
             {
-                throw new Exception($"ToDoCategory by id {dto.Id} does not found to update.");
+                throw new Exception($"ToDoCategory by id {categoryId} does not found to update.");
             }
 
-            ToDoCategory category = Mapper.Map<ToDoCategory>(dto);
-            ToDoCategory result = await ToDoCategoryRepository.UpdateToDoCategoryAsync(category);
-            return Mapper.Map<ToDoCategoryResponseDTO>(result);
+            dto.Adapt(existingCategory);
+            var result = await _toDoCategoryRepository.UpdateToDoCategoryAsync(existingCategory);
+
+            return result.Adapt<ToDoCategoryResponseDTO>();
         }
 
         public async Task<ToDoCategoryResponseDTO> DeleteToDoCategoryAsync(Guid categoryId)
         {
-            ToDoCategory? category = await ToDoCategoryRepository.GetToDoCategoryByIdAsync(categoryId);
+            var category = await _toDoCategoryRepository.GetToDoCategoryByIdAsync(categoryId);
             if (category is null)
             {
                 throw new Exception($"ToDoCategory by id {categoryId} does not found.");
             }
 
-            ToDoCategory result = await ToDoCategoryRepository.DeleteToDoCategoryAsync(category);
-            return Mapper.Map<ToDoCategoryResponseDTO>(result);
+            var result = await _toDoCategoryRepository.DeleteToDoCategoryAsync(category);
+
+            return result.Adapt<ToDoCategoryResponseDTO>();
         }
     }
 }

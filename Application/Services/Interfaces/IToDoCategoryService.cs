@@ -8,7 +8,7 @@ namespace Application.Services.Interfaces
         Task<ToDoCategoryResponseDTO> GetToDoCategoryByIdAsync(Guid categoryId);
         Task<ToDoCategoryResponseDTO> GetToDoCategoryByIdIncludeTasksAsync(Guid categoryId);
         Task<IEnumerable<ToDoCategoryResponseDTO>> GetAllToDoCategoriesAsync();
-        Task<ToDoCategoryResponseDTO> UpdateToDoCategoryAsync(ToDoCategoryUpdateDTO dto);
+        Task<ToDoCategoryResponseDTO> UpdateToDoCategoryAsync(Guid categoryId, ToDoCategoryUpdateDTO dto);
         Task<ToDoCategoryResponseDTO> DeleteToDoCategoryAsync(Guid categoryId);
     }
 }

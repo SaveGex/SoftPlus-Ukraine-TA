@@ -2,19 +2,18 @@
 using Application.Services.Interfaces;
 using Domain.Models;
 using Domain.Repositories.Interfaces;
+using Mapster;
 using MapsterMapper;
 
 namespace Application.Services
 {
     public class ToDoStepService : IToDoStepService
     {
-        private IToDoStepRepository ToDoStepRepository { get; init; }
-        private IMapper Mapper { get; init; }
+        private readonly IToDoStepRepository _toDoStepRepository;
 
-        public ToDoStepService(IToDoStepRepository toDoStepRepository, IMapper mapper)
+        public ToDoStepService(IToDoStepRepository toDoStepRepository)
         {
-            ToDoStepRepository = toDoStepRepository;
-            Mapper = mapper;
+            _toDoStepRepository = toDoStepRepository;
         }
 
         public async Task<ToDoStepResponseDTO> CreateToDoStepAsync(ToDoStepCreateDTO dto)
@@ -24,55 +23,60 @@ namespace Application.Services
                 throw new Exception("Step name cannot be empty.");
             }
 
-            ToDoStep step = Mapper.Map<ToDoStep>(dto);
-            ToDoStep result = await ToDoStepRepository.CreateToDoStepAsync(step);
-            return Mapper.Map<ToDoStepResponseDTO>(result);
+            var step = dto.Adapt<ToDoStep>();
+            var result = await _toDoStepRepository.CreateToDoStepAsync(step);
+
+            return result.Adapt<ToDoStepResponseDTO>();
         }
 
         public async Task<ToDoStepResponseDTO> GetToDoStepByIdAsync(Guid stepId)
         {
-            ToDoStep? step = await ToDoStepRepository.GetToDoStepByIdAsync(stepId);
+            var step = await _toDoStepRepository.GetToDoStepByIdAsync(stepId);
             if (step is null)
             {
-                throw new Exception($"ToDoStep by id {stepId} does not found.");
+                throw new Exception($"ToDoStep with id {stepId} was not found.");
             }
-            return Mapper.Map<ToDoStepResponseDTO>(step);
+
+            return step.Adapt<ToDoStepResponseDTO>();
         }
 
         public async Task<IEnumerable<ToDoStepResponseDTO>> GetToDoStepsByTaskIdAsync(Guid taskId)
         {
-            var steps = await ToDoStepRepository.GetToDoStepsByTaskIdAsync(taskId);
-            return Mapper.Map<IEnumerable<ToDoStepResponseDTO>>(steps);
+            var steps = await _toDoStepRepository.GetToDoStepsByTaskIdAsync(taskId);
+
+            return steps.Adapt<IEnumerable<ToDoStepResponseDTO>>();
         }
 
-        public async Task<ToDoStepResponseDTO> UpdateToDoStepAsync(ToDoStepUpdateDTO dto)
+        public async Task<ToDoStepResponseDTO> UpdateToDoStepAsync(Guid stepId, ToDoStepUpdateDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Title))
             {
                 throw new Exception("Step name cannot be empty.");
             }
 
-            ToDoStep? existingStep = await ToDoStepRepository.GetToDoStepByIdAsync(dto.Id);
+            var existingStep = await _toDoStepRepository.GetToDoStepByIdAsync(stepId);
             if (existingStep is null)
             {
-                throw new Exception($"ToDoStep by id {dto.Id} does not found to update.");
+                throw new Exception($"ToDoStep with id {stepId} was not found to update.");
             }
 
-            ToDoStep step = Mapper.Map<ToDoStep>(dto);
-            ToDoStep result = await ToDoStepRepository.UpdateToDoStepAsync(step);
-            return Mapper.Map<ToDoStepResponseDTO>(result);
+            dto.Adapt(existingStep);
+            var result = await _toDoStepRepository.UpdateToDoStepAsync(existingStep);
+
+            return result.Adapt<ToDoStepResponseDTO>();
         }
 
         public async Task<ToDoStepResponseDTO> DeleteToDoStepAsync(Guid stepId)
         {
-            ToDoStep? step = await ToDoStepRepository.GetToDoStepByIdAsync(stepId);
+            var step = await _toDoStepRepository.GetToDoStepByIdAsync(stepId);
             if (step is null)
             {
-                throw new Exception($"ToDoStep by id {stepId} does not found.");
+                throw new Exception($"ToDoStep with id {stepId} was not found.");
             }
 
-            ToDoStep result = await ToDoStepRepository.DeleteToDoStepAsync(step);
-            return Mapper.Map<ToDoStepResponseDTO>(result);
+            var result = await _toDoStepRepository.DeleteToDoStepAsync(step);
+
+            return result.Adapt<ToDoStepResponseDTO>();
         }
     }
 }

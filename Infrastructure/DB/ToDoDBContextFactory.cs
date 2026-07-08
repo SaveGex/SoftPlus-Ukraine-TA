@@ -12,9 +12,11 @@ namespace Infrastructure.DB
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory()) // for the future
                 .AddEnvironmentVariables()
+                .AddCommandLine(args)
                 .Build();
 
-            return new ToDoDBContext(optionsBuilder.Options, configuration);
+            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found."));
+            return new ToDoDBContext(optionsBuilder.Options);
         }
     }
 

@@ -7,7 +7,7 @@ namespace Application.Services.Interfaces
         Task<ToDoStepResponseDTO> CreateToDoStepAsync(ToDoStepCreateDTO dto);
         Task<ToDoStepResponseDTO> GetToDoStepByIdAsync(Guid stepId);
         Task<IEnumerable<ToDoStepResponseDTO>> GetToDoStepsByTaskIdAsync(Guid taskId);
-        Task<ToDoStepResponseDTO> UpdateToDoStepAsync(ToDoStepUpdateDTO dto);
+        Task<ToDoStepResponseDTO> UpdateToDoStepAsync(Guid stepId, ToDoStepUpdateDTO dto);
         Task<ToDoStepResponseDTO> DeleteToDoStepAsync(Guid stepId);
     }
 }
