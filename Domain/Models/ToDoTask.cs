@@ -1,5 +1,4 @@
 ﻿using Domain.Enums;
-using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models
 {
@@ -23,8 +22,8 @@ namespace Domain.Models
 
         public RecurrenceType Recurrence { get; set; } = RecurrenceType.None;
 
-        public Guid CategoryId { get; set; }
-        public ToDoCategory Category { get; set; } = null!;
+        public Guid? CategoryId { get; set; }
+        public ToDoCategory? Category { get; set; } = null!;
 
         public ICollection<ToDoStep> Steps { get; set; } = new List<ToDoStep>();
     }
