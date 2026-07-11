@@ -1,7 +1,10 @@
 <Solution>
-  <Project Path="Application/Application.csproj" />
-  <Project Path="Domain/Domain.csproj" />
-  <Project Path="Infrastructure/Infrastructure.csproj" />
-  <Project Path="Tests/Tests.csproj" />
-  <Project Path="To-Do application/To-Do application.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path="src/ToDo.Infrastructure/Infrastructure.csproj" />
+  </Folder>
+  <Project Path="src/ToDo.Api/To-Do application.csproj" />
+  <Project Path="src/ToDo.Application/Application.csproj" />
+  <Project Path="src/ToDo.Domain/Domain.csproj" />
+  <Project Path="src/ToDo.Infrastructure/Infrastructure.csproj" />
+  <Project Path="ToDo.UnitTests/Tests.csproj" />
 </Solution>
