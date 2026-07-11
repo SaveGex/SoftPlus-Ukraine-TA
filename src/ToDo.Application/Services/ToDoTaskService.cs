@@ -10,11 +10,13 @@ namespace Application.Services
     {
         private readonly IToDoTaskRepository _toDoTaskRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IUnitOfWorkRepository _unitOfWorkRepository;
 
-        public ToDoTaskService(IToDoTaskRepository toDoTaskRepository, ICurrentUserService currentUserService)
+        public ToDoTaskService(IToDoTaskRepository toDoTaskRepository, ICurrentUserService currentUserService, IUnitOfWorkRepository unitOfWorkRepository)
         {
             _toDoTaskRepository = toDoTaskRepository;
             _currentUserService = currentUserService;
+            _unitOfWorkRepository = unitOfWorkRepository;
         }
 
         public async Task<ToDoTaskResponseDTO> CreateToDoTaskAsync(ToDoTaskCreateDTO dto)
@@ -27,6 +29,8 @@ namespace Application.Services
             var task = dto.Adapt<ToDoTask>();
             task.AuthorId = _currentUserService.UserId;
             var result = await _toDoTaskRepository.CreateToDoTaskAsync(task);
+
+            await _unitOfWorkRepository.SaveChangesAsync();
 
             return result.Adapt<ToDoTaskResponseDTO>();
         }
@@ -84,6 +88,8 @@ namespace Application.Services
             dto.Adapt(existingTask);
             var result = await _toDoTaskRepository.UpdateToDoTaskAsync(existingTask);
 
+            await _unitOfWorkRepository.SaveChangesAsync();
+
             return result.Adapt<ToDoTaskResponseDTO>();
         }
 
@@ -96,6 +102,8 @@ namespace Application.Services
             }
 
             var result = await _toDoTaskRepository.DeleteToDoTaskAsync(task);
+
+            await _unitOfWorkRepository.SaveChangesAsync();
 
             return result.Adapt<ToDoTaskResponseDTO>();
         }

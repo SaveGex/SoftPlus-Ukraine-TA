@@ -25,7 +25,7 @@ namespace Application.Services
             entityType = entityTypes.FirstOrDefault(e =>
             (
                 e is not null ?
-                (e.Name.ToLower() + 's' == entityName.ToLower())
+                (e.Name.ToLower() == entityName.ToLower())
                 : false)
             );
 

@@ -3,6 +3,7 @@ using Application.Services.Interfaces;
 using Domain.Interfaces;
 using Domain.Models;
 using Mapster;
+using Microsoft.AspNetCore.Http;
 
 namespace Application.Services
 {
@@ -10,11 +11,18 @@ namespace Application.Services
     {
         private readonly IToDoCategoryRepository _toDoCategoryRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAssetsRepository _assetsRepository;
+        private readonly IUnitOfWorkRepository _unitOfWorkRepository;
 
-        public ToDoCategoryService(IToDoCategoryRepository toDoCategoryRepository, ICurrentUserService currentUserService)
+        public ToDoCategoryService(IToDoCategoryRepository toDoCategoryRepository,
+            ICurrentUserService currentUserService,
+            IAssetsRepository assetsRepository,
+            IUnitOfWorkRepository unitOfWorkRepository)
         {
             _toDoCategoryRepository = toDoCategoryRepository;
             _currentUserService = currentUserService;
+            _assetsRepository = assetsRepository;
+            _unitOfWorkRepository = unitOfWorkRepository;
         }
 
         public async Task<ToDoCategoryResponseDTO> CreateToDoCategoryAsync(ToDoCategoryCreateDTO dto)
@@ -25,10 +33,24 @@ namespace Application.Services
             }
 
             var category = dto.Adapt<ToDoCategory>();
-            var result = await _toDoCategoryRepository.CreateToDoCategoryAsync(category);
+            category.AuthorId = _currentUserService.UserId;
 
-            return result.Adapt<ToDoCategoryResponseDTO>();
+            category.Icon = await HandleIconUploadAsync(dto.Icon);
+
+            try
+            {
+                var result = await _toDoCategoryRepository.CreateToDoCategoryAsync(category);
+                await _unitOfWorkRepository.SaveChangesAsync();
+
+                return MapToResponseDTO(result);
+            }
+            catch (Exception)
+            {
+                HandleIconFileDelete(category.Icon);
+                throw;
+            }
         }
+
 
         public async Task<ToDoCategoryResponseDTO> GetToDoCategoryByIdAsync(Guid categoryId)
         {
@@ -38,7 +60,7 @@ namespace Application.Services
                 throw new Exception($"ToDoCategory by id {categoryId} does not found.");
             }
 
-            return category.Adapt<ToDoCategoryResponseDTO>();
+            return MapToResponseDTO(category);
         }
 
         public async Task<ToDoCategoryResponseDTO> GetToDoCategoryByIdIncludeTasksAsync(Guid categoryId)
@@ -49,14 +71,14 @@ namespace Application.Services
                 throw new Exception($"ToDoCategory by id {categoryId} does not found.");
             }
 
-            return category.Adapt<ToDoCategoryResponseDTO>();
+            return MapToResponseDTO(category);
         }
 
         public async Task<IEnumerable<ToDoCategoryResponseDTO>> GetAllToDoCategoriesAsync()
         {
             var categories = await _toDoCategoryRepository.GetAllToDoCategoriesAsync(_currentUserService.UserId);
 
-            return categories.Adapt<IEnumerable<ToDoCategoryResponseDTO>>();
+            return categories.Select(MapToResponseDTO);
         }
 
         public async Task<ToDoCategoryResponseDTO> UpdateToDoCategoryAsync(Guid categoryId, ToDoCategoryUpdateDTO dto)
@@ -72,10 +94,38 @@ namespace Application.Services
                 throw new Exception($"ToDoCategory by id {categoryId} does not found to update.");
             }
 
-            dto.Adapt(existingCategory);
-            var result = await _toDoCategoryRepository.UpdateToDoCategoryAsync(existingCategory);
+            string? oldIconName = existingCategory.Icon?.Name;
+            Icon? newIconEntity = null;
 
-            return result.Adapt<ToDoCategoryResponseDTO>();
+            if (dto.Icon != null)
+            {
+                newIconEntity = await HandleIconUploadAsync(dto.Icon);
+            }
+
+            dto.Adapt(existingCategory);
+
+            if (dto.Icon != null)
+            {
+                existingCategory.Icon = newIconEntity;
+            }
+
+            try
+            {
+                var result = await _toDoCategoryRepository.UpdateToDoCategoryAsync(existingCategory);
+                await _unitOfWorkRepository.SaveChangesAsync();
+
+                if (dto.Icon != null && oldIconName != null)
+                {
+                    _assetsRepository.DeletePhysicalFile(oldIconName);
+                }
+
+                return MapToResponseDTO(result);
+            }
+            catch (Exception)
+            {
+                HandleIconFileDelete(newIconEntity);
+                throw;
+            }
         }
 
         public async Task<ToDoCategoryResponseDTO> DeleteToDoCategoryAsync(Guid categoryId)
@@ -86,9 +136,54 @@ namespace Application.Services
                 throw new Exception($"ToDoCategory by id {categoryId} does not found.");
             }
 
-            var result = await _toDoCategoryRepository.DeleteToDoCategoryAsync(category);
+            var iconToDelete = category.Icon;
 
-            return result.Adapt<ToDoCategoryResponseDTO>();
+            var result = await _toDoCategoryRepository.DeleteToDoCategoryAsync(category);
+            await _unitOfWorkRepository.SaveChangesAsync();
+
+            HandleIconFileDelete(iconToDelete);
+
+            return MapToResponseDTO(result);
         }
+        #region helpers
+        private ToDoCategoryResponseDTO MapToResponseDTO(ToDoCategory category)
+        {
+            var iconUrl = category.Icon != null
+                ? _assetsRepository.GetAssetUrl(category.Icon.Name)
+                : null;
+
+            var tasksDto = category.Tasks != null
+                ? category.Tasks.Adapt<List<ToDoTaskResponseDTO>>()
+                : new List<ToDoTaskResponseDTO>();
+
+            return new ToDoCategoryResponseDTO(
+                category.Id,
+                category.Name,
+                iconUrl,
+                tasksDto
+            );
+        }
+
+        private async Task<Icon?> HandleIconUploadAsync(IFormFile? iconFile)
+        {
+            if (iconFile is null) return null;
+
+            var extension = Path.GetExtension(iconFile.FileName);
+            using var stream = iconFile.OpenReadStream();
+
+            var savedIcon = await _assetsRepository.SaveAssetAsync(stream, extension);
+
+            return savedIcon;
+        }
+
+        private void HandleIconFileDelete(Icon? icon)
+        {
+            if (icon != null && !string.IsNullOrWhiteSpace(icon.Name))
+            {
+                _assetsRepository.DeletePhysicalFile(icon.Name);
+            }
+        }
+
+        #endregion
     }
 }

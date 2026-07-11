@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Microsoft.AspNetCore.Http;
 
 namespace Application.DTOs
 {
@@ -57,12 +58,12 @@ namespace Application.DTOs
 
     public record ToDoCategoryCreateDTO(
         string Name,
-        string? Icon
+        IFormFile? Icon
     );
 
     public record ToDoCategoryUpdateDTO(
         string Name,
-        string? Icon
+        IFormFile? Icon
     );
 
     // --- STEP DTOs ---
@@ -81,5 +82,15 @@ namespace Application.DTOs
     public record ToDoStepUpdateDTO(
         string Title,
         bool IsCompleted
+    );
+
+    // --- ICON DTOs ---
+    public record IconResponseDTO(
+        string Id,
+        string IconUrl
+    );
+
+    public record IconCreateDTO(
+        IFormFile File
     );
 }

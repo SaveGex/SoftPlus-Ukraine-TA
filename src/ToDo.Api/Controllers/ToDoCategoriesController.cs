@@ -10,7 +10,7 @@ namespace To_Do_application.Controllers
     public class ToDoCategoriesController : ControllerBase
     {
         private IToDoCategoryService ToDoCategoryService { get; init; }
-
+        private const string CATEGORIES_KEY = nameof(Domain.Models.ToDoCategory);
         public ToDoCategoriesController(IToDoCategoryService toDoCategoryService)
         {
             ToDoCategoryService = toDoCategoryService;
@@ -18,7 +18,7 @@ namespace To_Do_application.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(ToDoCategoryResponseDTO), StatusCodes.Status201Created)]
-        public async Task<IResult> CreateToDoCategory([FromBody] ToDoCategoryCreateDTO dto)
+        public async Task<IResult> CreateToDoCategory([FromForm] ToDoCategoryCreateDTO dto)
         {
             ToDoCategoryResponseDTO result;
             try
@@ -50,7 +50,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(ToDoCategoryResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", CATEGORIES_KEY)]
         public async Task<ActionResult<ToDoCategoryResponseDTO>> GetCategoryById(Guid id)
         {
             ToDoCategoryResponseDTO result;
@@ -67,7 +67,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}/tasks")]
         [ProducesResponseType(typeof(ToDoCategoryResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", CATEGORIES_KEY)]
         public async Task<ActionResult<ToDoCategoryResponseDTO>> GetCategoryWithTasks(Guid id)
         {
             ToDoCategoryResponseDTO result;
@@ -84,8 +84,8 @@ namespace To_Do_application.Controllers
 
         [HttpPut("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
-        public async Task<IResult> UpdateToDoCategory(Guid id, [FromBody] ToDoCategoryUpdateDTO dto)
+        [Ownership("id", CATEGORIES_KEY)]
+        public async Task<IResult> UpdateToDoCategory(Guid id, [FromForm] ToDoCategoryUpdateDTO dto)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace To_Do_application.Controllers
 
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", CATEGORIES_KEY)]
         public async Task<IResult> DeleteToDoCategory(Guid id)
         {
             try

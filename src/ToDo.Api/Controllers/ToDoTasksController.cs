@@ -10,6 +10,7 @@ namespace To_Do_application.Controllers
     public class ToDoTasksController : ControllerBase
     {
         private IToDoTaskService ToDoTaskService { get; init; }
+        private const string TASKS_KEY = nameof(Domain.Models.ToDoTask);
 
         public ToDoTasksController(IToDoTaskService toDoTaskService)
         {
@@ -67,7 +68,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(ToDoTaskResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", TASKS_KEY)]
         public async Task<ActionResult<ToDoTaskResponseDTO>> GetTaskById(Guid id)
         {
             ToDoTaskResponseDTO result;
@@ -84,7 +85,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}/details")]
         [ProducesResponseType(typeof(ToDoTaskResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", TASKS_KEY)]
         public async Task<ActionResult<ToDoTaskResponseDTO>> GetTaskWithDetails(Guid id)
         {
             ToDoTaskResponseDTO result;
@@ -101,7 +102,7 @@ namespace To_Do_application.Controllers
 
         [HttpPut("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", TASKS_KEY)]
         public async Task<IResult> UpdateToDoTask(Guid id, [FromBody] ToDoTaskUpdateDTO dto)
         {
             try
@@ -117,7 +118,7 @@ namespace To_Do_application.Controllers
 
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", TASKS_KEY)]
         public async Task<IResult> DeleteToDoTask(Guid id)
         {
             try

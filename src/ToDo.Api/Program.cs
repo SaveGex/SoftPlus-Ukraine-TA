@@ -15,6 +15,17 @@ builder.Configuration.AddConfiguration(new ConfigurationBuilder()
     .Build());
 
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -47,9 +58,14 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // probably here gonna be the Icons
+app.UseStaticFiles(new StaticFileOptions
+{
+    RequestPath = "/api"
+}); // probably here gonna be the Icons
 
 app.UseRouting();
+
+app.UseCors("AngularFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -7,8 +7,10 @@ namespace Infrastructure.Repositories
 {
     internal class ToDoCategoryRepository : IToDoCategoryRepository
     {
-        private readonly ToDoDBContext _context;
 
+        private readonly ToDoDBContext _context;
+        private IQueryable<ToDoCategory> BaseCategoryQuery =>
+            _context.ToDoCategories.Include(c => c.Icon);
         public ToDoCategoryRepository(ToDoDBContext context)
         {
             _context = context;
@@ -17,14 +19,14 @@ namespace Infrastructure.Repositories
         public async Task<ToDoCategory> CreateToDoCategoryAsync(ToDoCategory category)
         {
             await _context.ToDoCategories.AddAsync(category);
-            await _context.SaveChangesAsync();
+
             return category;
         }
 
         public async Task<ToDoCategory> GetToDoCategoryByIdAsync(Guid categoryId, Guid ownerId)
         {
-            ToDoCategory? category = await _context.ToDoCategories
-                .Where(c => c.UserId == ownerId)
+            ToDoCategory? category = await BaseCategoryQuery
+                .Where(c => c.AuthorId == ownerId)
                 .Where(c => c.Id == categoryId)
                 .SingleOrDefaultAsync();
 
@@ -38,31 +40,31 @@ namespace Infrastructure.Repositories
 
         public async Task<ToDoCategory?> GetToDoCategoryByIdIncludeTasksAsync(Guid categoryId, Guid ownerId)
         {
-            return await _context.ToDoCategories
+            return await BaseCategoryQuery
                 .Include(c => c.Tasks)
-                .Where(c => c.UserId == ownerId)
+                .Where(c => c.AuthorId == ownerId)
                 .Where(c => c.Id == categoryId)
                 .SingleOrDefaultAsync();
         }
 
         public async Task<IEnumerable<ToDoCategory>> GetAllToDoCategoriesAsync(Guid ownerId)
         {
-            return await _context.ToDoCategories
-                .Where(c => c.UserId == ownerId)
+            return await BaseCategoryQuery
+                .Where(c => c.AuthorId == ownerId)
                 .ToListAsync();
         }
 
         public async Task<ToDoCategory> UpdateToDoCategoryAsync(ToDoCategory category)
         {
             _context.ToDoCategories.Update(category);
-            await _context.SaveChangesAsync();
+
             return category;
         }
 
         public async Task<ToDoCategory> DeleteToDoCategoryAsync(ToDoCategory category)
         {
             _context.ToDoCategories.Remove(category);
-            await _context.SaveChangesAsync();
+
             return category;
         }
     }

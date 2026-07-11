@@ -16,6 +16,7 @@ namespace Infrastructure.DB
         public virtual DbSet<ToDoTask> ToDoTasks { get; set; }
         public virtual DbSet<ToDoStep> ToDoSteps { get; set; }
         public virtual DbSet<ToDoCategory> ToDoCategories { get; set; }
+        public virtual DbSet<Icon> Icons { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,7 +72,19 @@ namespace Infrastructure.DB
                 entity.Property(e => e.Id).HasDefaultValueSql("NEWID()");
 
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(256);
-                entity.Property(e => e.Icon);
+
+                entity.HasOne(category => category.Icon)
+                    .WithMany()
+                    .HasForeignKey(category => category.IconId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<Icon>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasDefaultValueSql("NEWID()");
+
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(256);
             });
             #endregion
         }

@@ -9,10 +9,12 @@ namespace Application.Services
     public class ToDoStepService : IToDoStepService
     {
         private readonly IToDoStepRepository _toDoStepRepository;
+        private readonly IUnitOfWorkRepository _unitOfWorkRepository;
 
-        public ToDoStepService(IToDoStepRepository toDoStepRepository)
+        public ToDoStepService(IToDoStepRepository toDoStepRepository, IUnitOfWorkRepository unitOfWorkRepository)
         {
             _toDoStepRepository = toDoStepRepository;
+            _unitOfWorkRepository = unitOfWorkRepository;
         }
 
         public async Task<ToDoStepResponseDTO> CreateToDoStepAsync(ToDoStepCreateDTO dto)
@@ -24,6 +26,8 @@ namespace Application.Services
 
             var step = dto.Adapt<ToDoStep>();
             var result = await _toDoStepRepository.CreateToDoStepAsync(step);
+
+            await _unitOfWorkRepository.SaveChangesAsync();
 
             return result.Adapt<ToDoStepResponseDTO>();
         }
@@ -62,6 +66,8 @@ namespace Application.Services
             dto.Adapt(existingStep);
             var result = await _toDoStepRepository.UpdateToDoStepAsync(existingStep);
 
+            await _unitOfWorkRepository.SaveChangesAsync();
+
             return result.Adapt<ToDoStepResponseDTO>();
         }
 
@@ -74,6 +80,8 @@ namespace Application.Services
             }
 
             var result = await _toDoStepRepository.DeleteToDoStepAsync(step);
+
+            await _unitOfWorkRepository.SaveChangesAsync();
 
             return result.Adapt<ToDoStepResponseDTO>();
         }

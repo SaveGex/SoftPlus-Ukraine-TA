@@ -7,6 +7,7 @@ namespace Infrastructure.Repositories
 {
     internal class ToDoStepRepository : IToDoStepRepository
     {
+
         private readonly ToDoDBContext _context;
 
         public ToDoStepRepository(ToDoDBContext context)
@@ -17,7 +18,7 @@ namespace Infrastructure.Repositories
         public async Task<ToDoStep> CreateToDoStepAsync(ToDoStep step)
         {
             await _context.ToDoSteps.AddAsync(step);
-            await _context.SaveChangesAsync();
+
             return step;
         }
 
@@ -45,14 +46,14 @@ namespace Infrastructure.Repositories
         public async Task<ToDoStep> UpdateToDoStepAsync(ToDoStep step)
         {
             _context.ToDoSteps.Update(step);
-            await _context.SaveChangesAsync();
+
             return step;
         }
 
         public async Task<ToDoStep> DeleteToDoStepAsync(ToDoStep step)
         {
             _context.ToDoSteps.Remove(step);
-            await _context.SaveChangesAsync();
+
             return step;
         }
     }

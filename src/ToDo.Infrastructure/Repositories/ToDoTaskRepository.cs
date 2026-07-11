@@ -9,7 +9,6 @@ namespace Infrastructure.Repositories
     internal class ToDoTaskRepository : IToDoTaskRepository
     {
         private readonly ToDoDBContext _context;
-
         public ToDoTaskRepository(ToDoDBContext context)
         {
             _context = context;
@@ -18,7 +17,7 @@ namespace Infrastructure.Repositories
         public async Task<ToDoTask> CreateToDoTaskAsync(ToDoTask task)
         {
             await _context.ToDoTasks.AddAsync(task);
-            await _context.SaveChangesAsync();
+
             return task;
         }
 
@@ -64,14 +63,14 @@ namespace Infrastructure.Repositories
         public async Task<ToDoTask> UpdateToDoTaskAsync(ToDoTask task)
         {
             _context.ToDoTasks.Update(task);
-            await _context.SaveChangesAsync();
+
             return task;
         }
 
         public async Task<ToDoTask> DeleteToDoTaskAsync(ToDoTask task)
         {
             _context.ToDoTasks.Remove(task);
-            await _context.SaveChangesAsync();
+
             return task;
         }
     }

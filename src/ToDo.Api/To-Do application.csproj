@@ -23,4 +23,8 @@
     <ProjectReference Include="..\ToDo.Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Assets\Categories\Icons\" />
+  </ItemGroup>
+
 </Project>

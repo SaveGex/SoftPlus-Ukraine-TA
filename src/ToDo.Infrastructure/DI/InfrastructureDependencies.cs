@@ -48,7 +48,8 @@ namespace Infrastructure.DI
                 services.AddScoped<IToDoStepRepository, ToDoStepRepository>();
                 services.AddScoped<IToDoTaskRepository, ToDoTaskRepository>();
                 services.AddScoped<IModelRepository, ModelRepository>();
-
+                services.AddScoped<IAssetsRepository, AssetsRepository>();
+                services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
             }
 
         }
