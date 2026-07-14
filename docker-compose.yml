@@ -1,0 +1,72 @@
+
+services:
+  db:
+    image: ${DOCKER_REGISTRY-}todo-db
+    build: 
+      context: .
+      dockerfile: src/ToDo.Database/Dockerfile
+    container_name: todo-db
+    env_file:
+      .env
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong!Passw0rd}
+    ports:
+      - "14330:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/scripts/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - todo-net
+
+  api:
+    build:
+      context: .
+      dockerfile: src/ToDo.Api/Dockerfile
+    container_name: todo-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      # APPLY_MIGRATIONS_ON_STARTUP: "true"
+      ConnectionStrings__DefaultConnection: Server=db,1433;Database=${MSSQL_DATABASE};User Id=${MSSQL_USER};Password=${MSSQL_USER_PASSWORD};TrustServerCertificate=True;
+
+      Jwt__Key: ${JWT_KEY:-SuperSecretLongKeyThatIsAtLeast32BytesLong!}
+      Jwt__Issuer: ToDoAppBackend
+      Jwt__Audience: ToDoAppFrontend
+    env_file:
+      .env
+    ports:
+      - "18080:8080"
+    networks:
+      - todo-net
+
+  client:
+    build:
+      context: .
+      dockerfile: src/ToDo.Angular.UI/Dockerfile
+    container_name: todo-client
+    env_file:
+      .env
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+    networks:
+      - todo-net
+    volumes:
+      - ./src/ToDo.Angular.UI/nginx.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  mssql-data:
+
+networks:
+  todo-net:
+    driver: bridge

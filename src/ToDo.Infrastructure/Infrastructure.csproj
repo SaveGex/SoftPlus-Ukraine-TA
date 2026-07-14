@@ -27,6 +27,8 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Tests" />
+		<!--for executing migrations--> 
+		<InternalsVisibleTo Include="To-Do application" /> 
 	</ItemGroup>
 
 </Project>

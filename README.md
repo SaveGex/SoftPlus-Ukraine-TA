@@ -17,6 +17,32 @@ git clone https://github.com/SaveGex/SoftPlus-Ukraine-TA.git
 npm run clear
 ```
 
+<<<<<<< HEAD
+=======
+## Run with Docker
+
+Each part of the app is packaged as its own image with a single responsibility
+(`src/ToDo.Api/Dockerfile` — backend, `src/ToDo.Angular.Ui/Dockerfile` — frontend),
+and `docker-compose.yml` wires them together with a SQL Server database.
+
+```bash
+docker compose up --build
+```
+
+- Frontend: http://localhost:4200
+- Backend API: http://localhost:8080/api (Scalar docs at http://localhost:8080/scalar)
+- SQL Server: localhost:1433 (sa / see `MSSQL_SA_PASSWORD`)
+
+The API container applies pending EF Core migrations automatically on startup, so
+the database schema is created for you on first run. Optionally copy `.env.example`
+to `.env` to override the SA password and JWT key.
+
+```bash
+docker compose down        # stop
+docker compose down -v     # stop and wipe the DB volume
+```
+
+>>>>>>> 59dc70c (feat: dockerize application stack and implement API resource ownership validation)
 
 ## Task
 

@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using To_Do_application.Controllers.Helpers;
 using To_Do_application.Filters.FilterAttributes;
 
 namespace To_Do_application.Controllers
@@ -10,7 +11,6 @@ namespace To_Do_application.Controllers
     public class ToDoTasksController : ControllerBase
     {
         private IToDoTaskService ToDoTaskService { get; init; }
-        private const string TASKS_KEY = nameof(Domain.Models.ToDoTask);
 
         public ToDoTasksController(IToDoTaskService toDoTaskService)
         {
@@ -68,7 +68,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(ToDoTaskResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", TASKS_KEY)]
+        [Ownership("id", AuthorIdPathResolver.TaskAuthorIdPath)]
         public async Task<ActionResult<ToDoTaskResponseDTO>> GetTaskById(Guid id)
         {
             ToDoTaskResponseDTO result;
@@ -85,7 +85,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}/details")]
         [ProducesResponseType(typeof(ToDoTaskResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", TASKS_KEY)]
+        [Ownership("id", AuthorIdPathResolver.TaskAuthorIdPath)]
         public async Task<ActionResult<ToDoTaskResponseDTO>> GetTaskWithDetails(Guid id)
         {
             ToDoTaskResponseDTO result;
@@ -102,7 +102,7 @@ namespace To_Do_application.Controllers
 
         [HttpPut("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", TASKS_KEY)]
+        [Ownership("id", AuthorIdPathResolver.TaskAuthorIdPath)]
         public async Task<IResult> UpdateToDoTask(Guid id, [FromBody] ToDoTaskUpdateDTO dto)
         {
             try
@@ -118,7 +118,7 @@ namespace To_Do_application.Controllers
 
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", TASKS_KEY)]
+        [Ownership("id", AuthorIdPathResolver.TaskAuthorIdPath)]
         public async Task<IResult> DeleteToDoTask(Guid id)
         {
             try

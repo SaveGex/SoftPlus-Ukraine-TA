@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using To_Do_application.Controllers.Helpers;
 using To_Do_application.Filters.FilterAttributes;
 
 namespace To_Do_application.Controllers
@@ -34,7 +35,7 @@ namespace To_Do_application.Controllers
 
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(ToDoStepResponseDTO), StatusCodes.Status200OK)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", AuthorIdPathResolver.StepAuthorIdPath)]
         public async Task<ActionResult<ToDoStepResponseDTO>> GetStepById(Guid id)
         {
             ToDoStepResponseDTO result;
@@ -49,9 +50,10 @@ namespace To_Do_application.Controllers
             return Ok(result);
         }
 
+
         [HttpGet("task/{taskId:guid}")]
         [ProducesResponseType(typeof(IEnumerable<ToDoStepResponseDTO>), StatusCodes.Status200OK)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("taskId", AuthorIdPathResolver.TaskAuthorIdPath)]
         public async Task<ActionResult<IEnumerable<ToDoStepResponseDTO>>> GetStepsByTaskId(Guid taskId)
         {
             IEnumerable<ToDoStepResponseDTO> result;
@@ -68,7 +70,7 @@ namespace To_Do_application.Controllers
 
         [HttpPut("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", AuthorIdPathResolver.StepAuthorIdPath)]
         public async Task<IResult> UpdateToDoStep(Guid id, [FromBody] ToDoStepUpdateDTO dto)
         {
             try
@@ -84,7 +86,7 @@ namespace To_Do_application.Controllers
 
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [Ownership("id", nameof(Domain.Models.ToDoTask))]
+        [Ownership("id", AuthorIdPathResolver.StepAuthorIdPath)]
         public async Task<IResult> DeleteToDoStep(Guid id)
         {
             try

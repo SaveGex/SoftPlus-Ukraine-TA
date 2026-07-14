@@ -9,18 +9,22 @@ namespace To_Do_application.Filters
     {
         private readonly IEntityOwnershipService _ownershipService;
         private readonly string _entityIdKey;
-        private readonly string _entityName;
+        private readonly string _authorPath;
 
         /// <summary>
         /// Specifies that a user ownership of an entity or it's have special permission (admin, manager)
         /// </summary>
         /// <param name="entityIdKey">The key representing a <see cref="Guid"/> variable from ROUTE which is contains Id of an entity</param>
-        /// <param name="entityName">The name in plural of the entity to which the filter applies. <br/><b>For instance <see cref="User"/> - Users</b></param>
-        public OwnershipFilter(IEntityOwnershipService _ownershipService, string entityIdKey, string entityName)
+        /// <param name="authorPath">
+        /// Dot-separated path starting with the root entity's type name, followed by zero or more
+        /// navigation property names, ending with the property that stores the author's Guid.
+        /// E.g. <see cref="Domain.Models.ToDoStep.TodoTask.AuthorId"/>.
+        /// </param>
+        public OwnershipFilter(IEntityOwnershipService _ownershipService, string entityIdKey, string authorPath)
         {
             this._ownershipService = _ownershipService;
             _entityIdKey = entityIdKey;
-            _entityName = entityName;
+            _authorPath = authorPath;
         }
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
@@ -43,7 +47,7 @@ namespace To_Do_application.Filters
                 return;
             }
 
-            bool isOwner = await _ownershipService.IsUserOwnerAsync(userId, entityId, _entityName);
+            bool isOwner = await _ownershipService.IsUserOwnerAsync(userId, entityId, _authorPath);
             if (!isOwner)
             {
                 context.Result = new ForbidResult();

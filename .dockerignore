@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/out-tsc/
+**/.vs/
+**/.vscode/
+.git/
+.gitignore
+.gitattributes
+*.md

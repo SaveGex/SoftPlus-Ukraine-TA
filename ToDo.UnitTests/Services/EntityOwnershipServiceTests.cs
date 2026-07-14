@@ -5,6 +5,7 @@ using FluentAssertions;
 using Infrastructure.DB;
 using Mapster;
 using Microsoft.Extensions.DependencyInjection;
+using To_Do_application.Controllers.Helpers;
 
 namespace Tests.Services
 {
@@ -24,7 +25,7 @@ namespace Tests.Services
         public async Task IsUserOwnerAsync_ShouldReturnTrue_WhenEntityBelongsToTheUser()
         {
             var currentUserId = Guid.Empty;
-            var entityName = nameof(ToDoTask) + "s";
+            var authorPathId = AuthorIdPathResolver.TaskAuthorIdPath;
 
             var dto = new ToDoTaskCreateDTO("Happy Path Task", null, true, true, null, null, Domain.Enums.RecurrenceType.None, null);
             var task = dto.Adapt<ToDoTask>();
@@ -35,7 +36,7 @@ namespace Tests.Services
             await _ctx.SaveChangesAsync();
             _ctx.ChangeTracker.Clear();
 
-            var result = await _sut.IsUserOwnerAsync(currentUserId, task.Id, entityName);
+            var result = await _sut.IsUserOwnerAsync(currentUserId, task.Id, authorPathId);
 
             result.Should().BeTrue();
         }

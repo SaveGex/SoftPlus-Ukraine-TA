@@ -1,4 +1,5 @@
 using Application.DI;
+using Infrastructure.DB.Extensions;
 using Infrastructure.DI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -57,7 +58,13 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+app.ExecuteMigrations();
+
+if (!app.Environment.IsEnvironment("Docker"))
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
     RequestPath = "/api"
@@ -76,5 +83,7 @@ app.MapControllers().RequireAuthorization();
 
 app.Run();
 
-
-public partial class Program { }
+namespace ToDoApplication
+{
+    public partial class Program { }
+}

@@ -22,5 +22,13 @@ namespace Infrastructure.Repositories
         {
             return await _context.FindAsync(entityType, keyValues);
         }
+
+        public async Task LoadReferenceAsync(object entity, string navigationPropertyName)
+        {
+            var reference = _context.Entry(entity).Reference(navigationPropertyName);
+            if (!reference.IsLoaded) // just in case if the global query load something...
+                await reference.LoadAsync();
+        }
+
     }
 }

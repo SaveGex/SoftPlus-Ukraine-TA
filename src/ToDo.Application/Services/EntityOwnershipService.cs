@@ -1,4 +1,4 @@
-﻿using Application.Services.Interfaces;
+using Application.Services.Interfaces;
 using Domain.Interfaces;
 using System.Reflection;
 
@@ -17,41 +17,42 @@ namespace Application.Services
         }
 
 
-        public async Task<bool> IsUserOwnerAsync(Guid userId, Guid entityId, string entityName)
+        public async Task<bool> IsUserOwnerAsync(Guid userId, Guid entityId, string authorPath)
         {
-            IEnumerable<Type?> entityTypes = ModelRepository.GetEntityTypes();
-            Type? entityType;
+            var segments = authorPath.Split('.');
 
-            entityType = entityTypes.FirstOrDefault(e =>
-            (
-                e is not null ?
-                (e.Name.ToLower() == entityName.ToLower())
-                : false)
-            );
+            var rootEntityType = ModelRepository.GetEntityTypes()
+                .FirstOrDefault(t => t?.Name == segments[0])
+                ?? throw new ArgumentException($"Unknown entity type '{segments[0]}' in ownership path '{authorPath}'.");
 
-            if (entityType is null)
+            object? current = await ModelRepository.FindEntityAsync(rootEntityType, entityId)
+                ?? throw new ArgumentException($"Entity '{segments[0]}' with ID '{entityId}' does not exist.");
+
+            for (int i = 1; i < segments.Length - 1; i++)
             {
-                throw new ArgumentException($"Entity with name '{entityName}' does not exist in the current context.");
+                var navPropName = segments[i];
+
+                await ModelRepository.LoadReferenceAsync(current, navPropName);
+
+                var navProp = current.GetType().GetProperty(navPropName)
+                    ?? throw new ArgumentException(
+                        $"Type '{current.GetType().Name}' has no navigation property '{navPropName}' (path: '{authorPath}').");
+
+                current = navProp.GetValue(current)
+                    ?? throw new ArgumentException(
+                        $"Navigation '{navPropName}' resolved to null while checking ownership (path: '{authorPath}').");
             }
 
-            object? entity = await ModelRepository.FindEntityAsync(entityType, entityId);
+            var authorPropName = segments[^1];
+            var authorProp = current.GetType().GetProperty(authorPropName)
+                ?? throw new ArgumentException(
+                    $"Type '{current.GetType().Name}' has no property '{authorPropName}' (path: '{authorPath}').");
 
-            if (entity is null)
-            {
-                throw new ArgumentException($"Entity with name '{entityName}' and ID '{entityId}' does not exist.");
-            }
+            if (authorProp.GetValue(current) is not Guid authorId)
+                throw new ArgumentException(
+                    $"Property '{authorPropName}' on '{current.GetType().Name}' is not a Guid (path: '{authorPath}').");
 
-            if (entity.GetType().GetProperty("AuthorId") is not PropertyInfo AuthorId)
-            {
-                throw new ArgumentException($"Entity with name '{entityName}' does not have an 'AuthorId' property.");
-            }
-
-            if (AuthorId.GetValue(entity) is Guid authorId && authorId == userId)
-            {
-                return true;
-            }
-
-            return false;
+            return authorId == userId;
         }
     }
 }

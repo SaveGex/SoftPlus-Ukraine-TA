@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CategoryService } from '../../../core/services/category.service';
 import { ToDoCategoryResponseDTO } from '../../../core/models/models';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../../environments/environment';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-category-list',
@@ -69,17 +70,24 @@ import { environment } from '../../../../environments/environment';
   `
 })
 export class CategoryListComponent implements OnInit {
+  private sanitizer = inject(DomSanitizer);
+  private categoryService: CategoryService = inject(CategoryService);
+
   categories = signal<ToDoCategoryResponseDTO[]>([]);
   newName = '';
   newIcon: File | null = null;
-  newIconPreview = signal<string | null>(null);
+  newIconPreview = signal<string | SafeUrl | null>(null);
 
   editingId = signal<string | null>(null);
   editName = '';
   editIcon: File | null = null;
-  editIconPreview = signal<string | null>(null);
+  editIconPreview = signal<string | SafeUrl | null>(null);
+  
+  private rawPreviewUrl: string | null = null;
+  private rawPreviewEditUrl: string | null = null;
 
-  constructor(private categoryService: CategoryService) {}
+
+  constructor() {}
 
   ngOnInit(): void {
     this.refresh();
@@ -89,7 +97,10 @@ export class CategoryListComponent implements OnInit {
     this.categoryService.getAll().subscribe((cats) => this.categories.set(cats));
   }
 
-  getIconUrl(iconPath: string): string {
+  getIconUrl(iconPath: string | null | undefined): string {
+    if (!iconPath) {
+      return 'assets/default-icon.png';
+    }
     if (iconPath.startsWith('http://') || iconPath.startsWith('https://') || iconPath.startsWith('assets/')) {
       return iconPath;
     }
@@ -100,7 +111,14 @@ export class CategoryListComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.newIcon = input.files[0];
-      this.newIconPreview.set(URL.createObjectURL(this.newIcon));
+
+      this.revokeOldUrl();
+      this.rawPreviewUrl = URL.createObjectURL(this.newIcon);
+
+      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(this.rawPreviewUrl);
+      this.newIconPreview.set(safeUrl);
+
+      input.value = '';
     }
   }
 
@@ -108,7 +126,14 @@ export class CategoryListComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.editIcon = input.files[0];
-      this.editIconPreview.set(URL.createObjectURL(this.editIcon));
+
+      this.revokeOldUrl();
+      this.rawPreviewEditUrl = URL.createObjectURL(this.editIcon);
+
+      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(this.rawPreviewEditUrl);
+      this.editIconPreview.set(safeUrl);
+
+      input.value = '';
     }
   }
 
@@ -150,5 +175,16 @@ export class CategoryListComponent implements OnInit {
   remove(c: ToDoCategoryResponseDTO): void {
     if (!confirm(`Delete category "${c.name}"?`)) return;
     this.categoryService.delete(c.id).subscribe(() => this.refresh());
+  }
+
+  private revokeOldUrl(): void {
+    if (this.rawPreviewUrl) {
+      URL.revokeObjectURL(this.rawPreviewUrl);
+      this.rawPreviewUrl = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.revokeOldUrl();
   }
 }
